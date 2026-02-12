@@ -13,7 +13,9 @@ export default function RootLayout() {
       /> */}
       <StatusBar style={scheme === "dark" ? "dark" : "light"} />
       <Stack>
+        <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="register" options={{ headerShown: false }} />
       </Stack>
     </SafeAreaProvider>
   );
