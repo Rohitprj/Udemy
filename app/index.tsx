@@ -112,6 +112,7 @@
 import { useRouter } from "expo-router";
 import React, { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
+import "../global.css";
 import { useAuthStore } from "../src/stores/authStore";
 
 export default function Home() {
