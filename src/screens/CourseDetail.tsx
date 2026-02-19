@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Button, Image, Text, View } from "react-native";
+import { Button, Image, StyleSheet, Text, View } from "react-native";
 import api from "../api/axios";
 
 export default function CourseDetail() {
@@ -21,34 +21,63 @@ export default function CourseDetail() {
 
   if (!course)
     return (
-      <View className="flex-1 items-center justify-center">
+      <View style={styles.loading}>
         <Text>Loading...</Text>
       </View>
     );
 
   return (
-    <View className="flex-1 p-3">
+    <View style={styles.container}>
       <Image
         source={{ uri: course.image || "https://picsum.photos/300" }}
-        style={{ height: 200, borderRadius: 8 }}
+        style={styles.image}
       />
-      <Text className="text-xl font-bold mt-3">
-        {course.title || course.name}
-      </Text>
-      <Text className="text-gray-600 mt-2">
+      <Text style={styles.title}>{course.title || course.name}</Text>
+      <Text style={styles.description}>
         {course.description || "No description"}
       </Text>
-      <Button
-        title="Open Content"
-        onPress={() =>
-          router.push({
-            pathname: "/webview",
-            params: {
-              html: `<h1>${course.title}</h1><p>${course.description}</p>`,
-            },
-          })
-        }
-      />
+      <View style={styles.button}>
+        <Button
+          title="Open Content"
+          onPress={() =>
+            router.push({
+              pathname: "/webview",
+              params: {
+                html: `<h1>${course.title}</h1><p>${course.description}</p>`,
+              },
+            })
+          }
+        />
+      </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  loading: { flex: 1, alignItems: "center", justifyContent: "center" },
+  container: {
+    flex: 1,
+    padding: 12,
+    backgroundColor: "#ffffff",
+  },
+  image: {
+    height: 200,
+    borderRadius: 8,
+    width: "100%",
+    resizeMode: "cover",
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: "700",
+    marginTop: 12,
+  },
+  description: {
+    color: "#4b5563",
+    marginTop: 8,
+    fontSize: 14,
+  },
+  button: {
+    marginTop: 16,
+    width: "40%",
+  },
+});

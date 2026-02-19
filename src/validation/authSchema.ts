@@ -6,9 +6,16 @@ export const loginSchema = z.object({
 });
 
 export const registerSchema = z.object({
-  name: z.string().min(2),
+  username: z.string().min(3, "Username must be at least 3 characters"),
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z
+    .string()
+    .min(6)
+    .regex(
+      /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&]).+$/,
+      "Password must contain letter, number and special character",
+    ),
+  role: z.enum(["ADMIN", "USER"]),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;

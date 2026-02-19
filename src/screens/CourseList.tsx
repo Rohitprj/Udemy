@@ -1,6 +1,12 @@
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
-import { FlatList, RefreshControl, TextInput, View } from "react-native";
+import {
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  TextInput,
+  View,
+} from "react-native";
 import api from "../api/axios";
 import CourseCard from "../components/CourseCard";
 
@@ -36,17 +42,21 @@ export default function CourseList() {
 
   const filtered = courses.filter(
     (c) =>
-      c.title?.toLowerCase().includes(query.toLowerCase()) ||
-      c.description?.toLowerCase().includes(query.toLowerCase()),
+      String(c.title || c.name || "")
+        .toLowerCase()
+        .includes(query.toLowerCase()) ||
+      String(c.description || "")
+        .toLowerCase()
+        .includes(query.toLowerCase()),
   );
 
   return (
-    <View className="flex-1 p-2">
+    <View style={styles.container}>
       <TextInput
         value={query}
         onChangeText={setQuery}
         placeholder="Search courses"
-        className="p-2 border rounded mb-2"
+        style={styles.search}
       />
       <FlatList
         data={filtered}
@@ -57,7 +67,7 @@ export default function CourseList() {
           <CourseCard
             id={item.id}
             title={item.title || item.name || "Untitled Course"}
-            instructor={instructors[0]?.name || "Instructor"}
+            instructor={(instructors[0]?.name as string) || "Instructor"}
             thumbnail={item.image || item.thumbnail}
             onPress={() => router.push(`/course/${item.id || item._id}`)}
           />
@@ -69,3 +79,18 @@ export default function CourseList() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 8,
+    backgroundColor: "#ffffff",
+  },
+  search: {
+    padding: 8,
+    borderWidth: 1,
+    borderColor: "#d1d5db", // gray-300
+    borderRadius: 6,
+    marginBottom: 8,
+  },
+});

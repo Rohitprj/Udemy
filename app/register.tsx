@@ -1,81 +1,104 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "expo-router";
-import React from "react";
-import { useForm } from "react-hook-form";
+import { router } from "expo-router";
+import React, { useState } from "react";
 import {
-  ActivityIndicator,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import api from "../src/api/axios";
-import { RegisterInput, registerSchema } from "../src/validation/authSchema";
 
 export default function RegisterScreen() {
-  const router = useRouter();
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    formState: { errors, isSubmitting },
-  } = useForm<RegisterInput>({
-    resolver: zodResolver(registerSchema),
-  });
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const onSubmit = async (data: RegisterInput) => {
-    try {
-      await api.post("/api/v1/users/register", data);
-      alert("Registration successful");
-      router.replace("/login");
-    } catch (e) {
-      alert("Registration failed");
-    }
+  const handleRegister = async () => {
+    const payload = {
+      username,
+      email,
+      password,
+      role: "ADMIN", // default role
+    };
+
+    console.log("Register Payload:", payload);
+
+    // Call API here
   };
 
   return (
-    <View className="flex-1 justify-center p-6 bg-white">
-      <Text className="text-2xl font-bold mb-6">Register</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Register</Text>
 
       <TextInput
-        placeholder="Name"
-        className="border p-3 rounded mb-2"
-        onChangeText={(t) => setValue("name", t)}
+        placeholder="Username"
+        style={styles.input}
+        value={username}
+        onChangeText={setUsername}
       />
-      {errors.name && (
-        <Text className="text-red-500">{errors.name.message}</Text>
-      )}
 
       <TextInput
         placeholder="Email"
+        style={styles.input}
+        value={email}
+        onChangeText={setEmail}
         autoCapitalize="none"
-        className="border p-3 rounded mb-2"
-        onChangeText={(t) => setValue("email", t)}
       />
-      {errors.email && (
-        <Text className="text-red-500">{errors.email.message}</Text>
-      )}
 
       <TextInput
         placeholder="Password"
+        style={styles.input}
+        value={password}
+        onChangeText={setPassword}
         secureTextEntry
-        className="border p-3 rounded mb-2"
-        onChangeText={(t) => setValue("password", t)}
       />
-      {errors.password && (
-        <Text className="text-red-500">{errors.password.message}</Text>
-      )}
 
-      <TouchableOpacity
-        onPress={handleSubmit(onSubmit)}
-        className="bg-green-600 p-4 rounded mt-4 items-center"
-      >
-        {isSubmitting ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text className="text-white font-semibold">Register</Text>
-        )}
+      <TouchableOpacity style={styles.button} onPress={handleRegister}>
+        <Text style={styles.buttonText}>Register</Text>
+      </TouchableOpacity>
+
+      {/* 👇 Login Switch */}
+      <TouchableOpacity onPress={() => router.push("/login")}>
+        <Text style={styles.switchText}>Already have an account? Login</Text>
       </TouchableOpacity>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 20,
+    backgroundColor: "#fff",
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    marginBottom: 30,
+    textAlign: "center",
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 15,
+  },
+  button: {
+    backgroundColor: "#2563eb",
+    padding: 15,
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  switchText: {
+    textAlign: "center",
+    color: "#2563eb",
+    fontWeight: "600",
+  },
+});

@@ -1,14 +1,14 @@
 import { useLocalSearchParams } from "expo-router";
 import React from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { WebView } from "react-native-webview";
 
 export default function WebviewScreen() {
   const params = useLocalSearchParams();
-  const html = params.html || "<h1>No content</h1>";
+  const html = (params.html as string) || "<h1>No content</h1>";
 
   return (
-    <View className="flex-1">
+    <View style={styles.container}>
       <WebView
         originWhitelist={["*"]}
         source={{ html: String(html) }}
@@ -20,3 +20,7 @@ export default function WebviewScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#ffffff" },
+});

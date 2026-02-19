@@ -1,5 +1,5 @@
 import React from "react";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 type Props = {
   id: string;
@@ -17,18 +17,44 @@ export default function CourseCard({
   onPress,
 }: Props) {
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      className="flex-row p-3 border-b border-gray-200"
-    >
+    <TouchableOpacity onPress={onPress} style={styles.container}>
       <Image
         source={{ uri: thumbnail || "https://picsum.photos/80" }}
-        style={{ width: 80, height: 80, borderRadius: 8 }}
+        style={styles.thumbnail}
       />
-      <View className="flex-1 ml-3 justify-center">
-        <Text className="text-base font-semibold">{title}</Text>
-        <Text className="text-sm text-gray-600">{instructor}</Text>
+      <View style={styles.content}>
+        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.instructor}>{instructor}</Text>
       </View>
     </TouchableOpacity>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb", // gray-200
+    alignItems: "center",
+  },
+  thumbnail: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+  },
+  content: {
+    flex: 1,
+    marginLeft: 12,
+    justifyContent: "center",
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  instructor: {
+    fontSize: 14,
+    color: "#4b5563", // gray-600
+    marginTop: 4,
+  },
+});
