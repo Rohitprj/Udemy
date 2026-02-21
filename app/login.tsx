@@ -1,4 +1,3 @@
-// app/login.tsx
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
 import React, { useEffect } from "react";
@@ -16,6 +15,8 @@ import { LoginInput, loginSchema } from "../src/validation/authSchema";
 
 export default function LoginScreen() {
   const { login, loading, user } = useAuthStore();
+  console.log("loading", loading);
+  console.log("user", user);
   const router = useRouter();
 
   const {

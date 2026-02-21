@@ -1,65 +1,104 @@
-import { router } from "expo-router";
-import React, { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "expo-router";
+import React from "react";
+import { useForm } from "react-hook-form";
 import {
+  ActivityIndicator,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import api from "../src/api/axios";
+import { RegisterInput, registerSchema } from "../src/validation/authSchema";
 
 export default function RegisterScreen() {
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const router = useRouter();
 
-  const handleRegister = async () => {
-    const payload = {
-      username,
-      email,
-      password,
-      role: "ADMIN", // default role
-    };
+  const {
+    handleSubmit,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm<RegisterInput>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      role: "USER", // default role
+    },
+  });
 
-    console.log("Register Payload:", payload);
+  const onSubmit = async (data: RegisterInput) => {
+    try {
+      await api.post("/api/v1/users/register", data);
 
-    // Call API here
+      alert("Registration successful");
+      router.replace("/login");
+    } catch (error: any) {
+      console.log(error?.response?.data || error);
+      alert("Registration failed");
+    }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Register</Text>
+      <Text style={styles.header}>Register</Text>
 
       <TextInput
         placeholder="Username"
         style={styles.input}
-        value={username}
-        onChangeText={setUsername}
+        onChangeText={(t) => setValue("username", t)}
       />
+      {errors.username && (
+        <Text style={styles.error}>{errors.username.message}</Text>
+      )}
 
       <TextInput
         placeholder="Email"
-        style={styles.input}
-        value={email}
-        onChangeText={setEmail}
         autoCapitalize="none"
+        keyboardType="email-address"
+        style={styles.input}
+        onChangeText={(t) => setValue("email", t)}
       />
+      {errors.email && <Text style={styles.error}>{errors.email.message}</Text>}
 
       <TextInput
         placeholder="Password"
-        style={styles.input}
-        value={password}
-        onChangeText={setPassword}
         secureTextEntry
+        style={styles.input}
+        onChangeText={(t) => setValue("password", t)}
       />
+      {errors.password && (
+        <Text style={styles.error}>{errors.password.message}</Text>
+      )}
 
-      <TouchableOpacity style={styles.button} onPress={handleRegister}>
-        <Text style={styles.buttonText}>Register</Text>
-      </TouchableOpacity>
+      {/* Simple Role Toggle */}
+      <View style={styles.roleContainer}>
+        <TouchableOpacity
+          style={styles.roleButton}
+          onPress={() => setValue("role", "USER")}
+        >
+          <Text>USER</Text>
+        </TouchableOpacity>
 
-      {/* 👇 Login Switch */}
-      <TouchableOpacity onPress={() => router.push("/login")}>
-        <Text style={styles.switchText}>Already have an account? Login</Text>
+        <TouchableOpacity
+          style={styles.roleButton}
+          onPress={() => setValue("role", "ADMIN")}
+        >
+          <Text>ADMIN</Text>
+        </TouchableOpacity>
+      </View>
+
+      {errors.role && <Text style={styles.error}>{errors.role.message}</Text>}
+
+      <TouchableOpacity
+        onPress={handleSubmit(onSubmit)}
+        style={styles.primaryButton}
+      >
+        {isSubmitting ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.primaryButtonText}>Register</Text>
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -69,36 +108,47 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
-    padding: 20,
-    backgroundColor: "#fff",
+    padding: 16,
+    backgroundColor: "#ffffff",
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 30,
-    textAlign: "center",
+  header: {
+    fontSize: 24,
+    fontWeight: "700",
+    marginBottom: 16,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
+    borderColor: "#d1d5db",
     padding: 12,
-    marginBottom: 15,
+    borderRadius: 6,
+    marginBottom: 8,
   },
-  button: {
-    backgroundColor: "#2563eb",
-    padding: 15,
+  error: {
+    color: "#ef4444",
+    marginBottom: 6,
+  },
+  roleContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginVertical: 10,
+  },
+  roleButton: {
+    flex: 1,
+    padding: 12,
+    marginHorizontal: 5,
+    borderWidth: 1,
+    borderRadius: 6,
+    alignItems: "center",
+  },
+  primaryButton: {
+    backgroundColor: "#16a34a",
+    padding: 14,
     borderRadius: 8,
     alignItems: "center",
-    marginBottom: 20,
+    marginTop: 10,
   },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  switchText: {
-    textAlign: "center",
-    color: "#2563eb",
+  primaryButtonText: {
+    color: "#ffffff",
     fontWeight: "600",
   },
 });
