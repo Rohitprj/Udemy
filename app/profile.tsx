@@ -4,7 +4,7 @@ import { useAuthStore } from "../src/stores/authStore";
 
 export default function ProfileScreen() {
   const { user, logout } = useAuthStore();
-
+  console.log("user", user);
   if (!user) return null;
 
   return (

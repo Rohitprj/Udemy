@@ -32,7 +32,7 @@ export default function RegisterScreen() {
       await api.post("/api/v1/users/register", data);
 
       alert("Registration successful");
-      router.replace("/login");
+      router.replace("/profile");
     } catch (error: any) {
       console.log(error?.response?.data || error);
       alert("Registration failed");
