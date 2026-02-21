@@ -1,24 +1,20 @@
-import { useRouter } from "expo-router";
-import React, { useEffect } from "react";
+import { Redirect } from "expo-router";
+import React from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import CourseList from "../src/screens/CourseList";
 import { useAuthStore } from "../src/stores/authStore";
-
 export default function Home() {
   const { user, tryAutoLogin } = useAuthStore();
-  const router = useRouter();
+  const [initializing, setInitializing] = React.useState(true);
 
-  useEffect(() => {
-    tryAutoLogin();
+  React.useEffect(() => {
+    // perform auto-login once and mark when we're done so that we don't
+    // redirect to the login screen while the token lookup is in flight.
+    tryAutoLogin().finally(() => setInitializing(false));
   }, []);
 
-  useEffect(() => {
-    if (user === null) {
-      router.replace("/login");
-    }
-  }, [user]);
-
-  if (!user) {
+  // show a loading indicator while we're waiting for tryAutoLogin to finish
+  if (initializing) {
     return (
       <View style={styles.loading}>
         <ActivityIndicator size="large" />
@@ -26,6 +22,15 @@ export default function Home() {
     );
   }
 
+  // if the user is still null after initialization, redirect using the
+  // <Redirect> component instead of calling router.replace directly.  this
+  // avoids the "navigate before mounting" warning because the redirect is
+  // handled during render rather than in a side effect.
+  if (user === null) {
+    return <Redirect href="/login" />;
+  }
+
+  // otherwise, we have a user object and can render the main course list
   return <CourseList />;
 }
 

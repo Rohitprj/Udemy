@@ -1,6 +1,7 @@
+// app/login.tsx
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import {
   ActivityIndicator,
@@ -14,24 +15,34 @@ import { useAuthStore } from "../src/stores/authStore";
 import { LoginInput, loginSchema } from "../src/validation/authSchema";
 
 export default function LoginScreen() {
-  const { login, loading } = useAuthStore();
+  const { login, loading, user } = useAuthStore();
   const router = useRouter();
 
   const {
-    register,
     handleSubmit,
     setValue,
     formState: { errors },
   } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
+    defaultValues: { username: "", password: "" },
   });
+
+  useEffect(() => {
+    if (user) {
+      // if already logged in, navigate to home
+      router.replace("/");
+    }
+  }, [user]);
 
   const onSubmit = async (data: LoginInput) => {
     try {
-      await login(data.email, data.password);
+      await login(data.username, data.password);
       router.replace("/");
-    } catch (e) {
-      alert("Login failed");
+    } catch (err: any) {
+      console.warn("Login error:", err?.response?.data || err.message || err);
+      const message =
+        err?.response?.data?.message || err?.message || "Login failed";
+      alert(message);
     }
   };
 
@@ -40,14 +51,13 @@ export default function LoginScreen() {
       <Text style={styles.header}>Login</Text>
 
       <TextInput
-        placeholder="Email"
+        placeholder="Username"
         style={styles.input}
-        onChangeText={(t) => setValue("email", t)}
+        onChangeText={(t) => setValue("username", t)}
         autoCapitalize="none"
-        keyboardType="email-address"
       />
-      {errors.email && (
-        <Text style={styles.error}>{errors.email.message as string}</Text>
+      {errors.username && (
+        <Text style={styles.error}>{errors.username.message as string}</Text>
       )}
 
       <TextInput
@@ -96,7 +106,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     marginBottom: 8,
   },
-  error: { color: "#ef4444", marginBottom: 6 }, // red-500
+  error: { color: "#ef4444", marginBottom: 6 },
   primaryButton: {
     backgroundColor: "#2563eb", // blue-600
     padding: 14,
