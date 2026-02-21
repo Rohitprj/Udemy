@@ -36,9 +36,10 @@ export default function LoginScreen() {
   }, [user]);
 
   const onSubmit = async (data: LoginInput) => {
+    console.log("Login Data", data);
     try {
       await login(data.username, data.password);
-      router.replace("/");
+      router.replace("/(tabs)");
     } catch (err: any) {
       console.warn("Login error:", err?.response?.data || err.message || err);
       const message =

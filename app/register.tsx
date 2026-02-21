@@ -100,11 +100,19 @@ export default function RegisterScreen() {
           <Text style={styles.primaryButtonText}>Register</Text>
         )}
       </TouchableOpacity>
+      <TouchableOpacity onPress={() => router.push("/login")}>
+        <Text style={styles.switchText}>Already have an account? Login</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  switchText: {
+    textAlign: "center",
+    color: "#2563eb",
+    fontWeight: "600",
+  },
   container: {
     flex: 1,
     justifyContent: "center",

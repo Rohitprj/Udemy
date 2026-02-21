@@ -1,50 +1,7 @@
 // src/stores/authStore.ts
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import api from "../api/axios";
 import { secureDelete, secureGet, secureSave } from "../utils/secureStore";
-
-// Helper to retry secure storage with delay and retry logic
-const secureSaveWithRetry = async (
-  key: string,
-  value: string,
-  maxRetries = 3,
-  delayMs = 100,
-) => {
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      await new Promise((resolve) => setTimeout(resolve, delayMs * (i + 1)));
-      await secureSave(key, value);
-      return;
-    } catch (e) {
-      console.warn(
-        `Attempt ${i + 1}/${maxRetries} to save token failed:`,
-        (e as any).message,
-      );
-      if (i === maxRetries - 1) throw e;
-    }
-  }
-};
-
-const secureGetWithRetry = async (
-  key: string,
-  maxRetries = 3,
-  delayMs = 100,
-) => {
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      await new Promise((resolve) => setTimeout(resolve, delayMs * (i + 1)));
-      return await secureGet(key);
-    } catch (e) {
-      console.warn(
-        `Attempt ${i + 1}/${maxRetries} to get token failed:`,
-        (e as any).message,
-      );
-      if (i === maxRetries - 1) throw e;
-    }
-  }
-};
 
 type User = {
   id?: string;
@@ -64,144 +21,102 @@ type AuthState = {
   tryAutoLogin: () => Promise<void>;
 };
 
-export const useAuthStore = create<AuthState>(
-  persist(
-    (set, get) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
+  user: null,
+  token: null,
+  loading: false,
+
+  setUser: (u) => set({ user: u }),
+
+  login: async (username: string, password: string) => {
+    set({ loading: true });
+
+    try {
+      const res = await api.post("/api/v1/users/login", {
+        username,
+        password,
+      });
+
+      const token = res.data?.data?.accessToken;
+
+      if (!token) {
+        throw new Error("No token received from API");
+      }
+
+      // Save token securely
+      await secureSave("auth_token", token);
+
+      // Attach token to axios
+      api.defaults.headers.common.Authorization = `Bearer ${token}`;
+
+      const profile = res.data?.data?.user || null;
+
+      set({
+        user: profile,
+        token,
+        loading: false,
+      });
+    } catch (error) {
+      console.log("Login error:", error);
+      set({ loading: false });
+      throw error;
+    }
+  },
+
+  logout: async () => {
+    await secureDelete("auth_token");
+
+    delete api.defaults.headers.common.Authorization;
+
+    set({
       user: null,
       token: null,
-      loading: false,
-      setUser: (u) => set({ user: u }),
-      login: async (username: string, password: string) => {
-        set({ loading: true });
-        try {
-          // Login request: POST { username, password }
-          console.log("Attempting login with:", { username });
-          const res = await api.post("/api/v1/users/login", {
-            username,
-            password,
-          });
+    });
+  },
 
-          console.log("Login response:", JSON.stringify(res.data, null, 2));
+  tryAutoLogin: async () => {
+    set({ loading: true });
 
-          // Try common token locations:
-          const token =
-            res.data?.token ||
-            res.data?.data?.token ||
-            res.data?.accessToken ||
-            null;
+    try {
+      const token = await secureGet("auth_token");
 
-          console.log("Extracted token:", token ? "present" : "missing");
+      if (!token) {
+        set({ loading: false });
+        return;
+      }
 
-          if (!token) {
-            // If backend returns full object, adapt here as needed
-            throw new Error(
-              `No token in response. Got: ${JSON.stringify(res.data)}`,
-            );
-          }
+      api.defaults.headers.common.Authorization = `Bearer ${token}`;
 
-          // Persist token securely with retry logic
-          try {
-            await secureSaveWithRetry("auth_token", token);
-          } catch (e) {
-            console.warn(
-              "Failed to save token to secure storage after retries:",
-              e,
-            );
-          }
+      // Optional: validate token
+      try {
+        const res = await api.get("/api/v1/users/me");
+        const profile = res.data?.data || null;
 
-          // Attach to axios defaults
-          api.defaults.headers.common.Authorization = `Bearer ${token}`;
-
-          // Try to fetch profile (if API provides /me)
-          let profile = null;
-          try {
-            const me = await api.get("/api/v1/users/me");
-            profile = me.data?.data || me.data || null;
-            console.log("Fetched profile:", profile);
-          } catch (e) {
-            console.warn("Failed to fetch profile, using fallback:", e);
-            // fallback: if login response contains user object
-            profile = res.data?.user || res.data?.data?.user || null;
-          }
-
-          if (!profile) {
-            console.warn("No profile found, setting minimal user object");
-            profile = { username, id: username };
-          }
-
-          console.log("Setting user:", profile);
-          set({ user: profile, token, loading: false });
-        } catch (error: any) {
-          console.error("Login failed:", error?.message, error?.response?.data);
-          set({ loading: false });
-          throw error;
-        }
-      },
-      logout: async () => {
-        try {
-          await secureDelete("auth_token");
-        } catch (e) {
-          console.warn("Failed to delete token from secure storage:", e);
-        }
+        set({
+          user: profile,
+          token,
+          loading: false,
+        });
+      } catch {
+        // Token invalid
+        await secureDelete("auth_token");
         delete api.defaults.headers.common.Authorization;
-        set({ user: null, token: null });
-      },
-      tryAutoLogin: async () => {
-        set({ loading: true });
-        try {
-          let token: string | null = null;
-          try {
-            token = await secureGetWithRetry("auth_token");
-          } catch (e) {
-            console.warn("Failed to retrieve token from secure storage:", e);
-            set({ loading: false });
-            return;
-          }
 
-          if (!token) {
-            console.log("No stored token found");
-            set({ loading: false });
-            return;
-          }
+        set({
+          user: null,
+          token: null,
+          loading: false,
+        });
+      }
+    } catch (error) {
+      console.log("Auto login error:", error);
+      set({ loading: false });
+    }
+  },
+}));
 
-          console.log("Found stored token, validating...");
-          api.defaults.headers.common.Authorization = `Bearer ${token}`;
-
-          // Validate token by fetching profile (optional)
-          try {
-            const me = await api.get("/api/v1/users/me");
-            const profile = me.data?.data || me.data || null;
-            console.log("Auto-login successful, profile:", profile);
-            set({ token, user: profile, loading: false });
-          } catch (e: any) {
-            console.warn(
-              "Token validation failed:",
-              e?.message,
-              e?.response?.data,
-            );
-            // token invalid -> clear
-            try {
-              await secureDelete("auth_token");
-            } catch (deleteError) {
-              console.warn("Failed to delete token:", deleteError);
-            }
-            delete api.defaults.headers.common.Authorization;
-            set({ token: null, user: null, loading: false });
-          }
-        } catch (e) {
-          console.warn("Auto-login error:", e);
-          set({ loading: false });
-        }
-      },
-    }),
-    {
-      name: "auth-storage",
-      getStorage: () => AsyncStorage,
-      onRehydrateStorage: () => (state, error) => {
-        if (error) {
-          console.warn("Rehydrate error:", error);
-        }
-      },
-    },
-  ),
-);
+// Call this once on app start
+export const initializeAuth = async () => {
+  const store = useAuthStore.getState();
+  await store.tryAutoLogin();
+};

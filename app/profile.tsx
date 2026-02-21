@@ -1,20 +1,20 @@
 import React from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAuthStore } from "../src/stores/authStore";
 
 export default function ProfileScreen() {
   const { user, logout } = useAuthStore();
   console.log("user", user);
-  if (!user) return null;
+  // if (!user) return null;
 
   return (
     <View style={styles.container}>
-      <Image
+      {/* <Image
         source={{ uri: user.avatar || "https://i.pravatar.cc/150?img=3" }}
         style={styles.avatar}
       />
       <Text style={styles.name}>{user.name}</Text>
-      <Text style={styles.email}>{user.email}</Text>
+      <Text style={styles.email}>{user.email}</Text> */}
 
       <View style={styles.stats}>
         <Text style={styles.statText}>Courses Enrolled: 0</Text>
