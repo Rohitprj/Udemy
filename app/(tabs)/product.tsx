@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "@/src/api/axios";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -36,8 +36,8 @@ export default function ProductsScreen() {
         setLoadingMore(true);
       }
 
-      const res = await axios.get(
-        `https://api.freeapi.app/api/v1/public/randomproducts?page=${pageNumber}&limit=${LIMIT}&inc=category,price,thumbnail,images,title,id&query=mens-watches`,
+      const res = await api.get(
+        `api/v1/public/randomproducts?page=${pageNumber}&limit=${LIMIT}&inc=category,price,thumbnail,images,title,id&query=mens-watches`,
       );
 
       const responseData = res.data?.data;

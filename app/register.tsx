@@ -23,7 +23,7 @@ export default function RegisterScreen() {
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      role: "USER", // default role
+      role: "USER",
     },
   });
 
@@ -32,10 +32,10 @@ export default function RegisterScreen() {
       await api.post("/api/v1/users/register", data);
 
       alert("Registration successful");
-      router.replace("/profile");
+      router.replace("/(tabs)");
     } catch (error: any) {
       console.log(error?.response?.data || error);
-      alert("Registration failed");
+      alert(error?.response?.data?.message);
     }
   };
 

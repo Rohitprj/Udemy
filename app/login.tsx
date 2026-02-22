@@ -30,7 +30,6 @@ export default function LoginScreen() {
 
   useEffect(() => {
     if (user) {
-      // if already logged in, navigate to home
       router.replace("/");
     }
   }, [user]);
@@ -110,7 +109,7 @@ const styles = StyleSheet.create({
   },
   error: { color: "#ef4444", marginBottom: 6 },
   primaryButton: {
-    backgroundColor: "#2563eb", // blue-600
+    backgroundColor: "#2563eb",
     padding: 14,
     borderRadius: 8,
     alignItems: "center",

@@ -1,5 +1,4 @@
-// app/(tabs)/index.tsx
-import axios from "axios";
+import api from "@/src/api/axios";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -45,8 +44,8 @@ export default function UserScreen() {
         setLoadingMore(true);
       }
 
-      const res = await axios.get(
-        `https://api.freeapi.app/api/v1/public/randomusers?page=${pageNumber}&limit=${LIMIT}`,
+      const res = await api.get(
+        `api/v1/public/randomusers?page=${pageNumber}&limit=${LIMIT}`,
       );
 
       const newUsers = res.data?.data?.data || [];

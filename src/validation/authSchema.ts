@@ -1,4 +1,3 @@
-// src/validation/authSchema.ts
 import { z } from "zod";
 
 export const loginSchema = z.object({
